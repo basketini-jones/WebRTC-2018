@@ -1,0 +1,17 @@
+{
+    "name": "Unity.WebRTC.Editor",
+    "references": [
+        "Unity.WebRTC",
+        "Unity.EditorCoroutines.Editor"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
