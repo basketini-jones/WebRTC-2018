@@ -75,11 +75,8 @@ class ChangeCodecsSample : MonoBehaviour
         {
             if (e.Track is VideoStreamTrack track)
             {
-                track.OnVideoReceived += tex =>
-                {
-                    receiveImage.texture = tex;
-                    receiveImage.color = Color.white;
-                };
+                receiveImage.texture = track.InitializeReceiver(width, height);
+                receiveImage.color = Color.white;
             }
         };
     }
@@ -391,46 +388,23 @@ class ChangeCodecsSample : MonoBehaviour
 
         RTCStatsReport report = op.Value;
 
-        List<RTCOutboundRTPStreamStats> outBoundStatsList = report.Stats.Values.Where(
-            stats => stats.Type == RTCStatsType.OutboundRtp).Cast<RTCOutboundRTPStreamStats>().ToList();
+        IEnumerable<RTCOutboundRTPStreamStats> outBoundStatsList = report.Stats.Values.Where(
+            stats => stats.Type == RTCStatsType.OutboundRtp).Cast<RTCOutboundRTPStreamStats>();
 
-        if (!outBoundStatsList.Any())
-        {
-            Debug.LogWarning($"{nameof(RTCStatsReport)} don't contain any {nameof(RTCOutboundRTPStreamStats)}");
-            yield break;
-        }
-
-        RTCOutboundRTPStreamStats outBoundStats = outBoundStatsList.FirstOrDefault(stats => stats.kind == "video");
-        if (outBoundStats == null)
-        {
-            Debug.LogWarning($"{nameof(RTCOutboundRTPStreamStats)} with kind video is not included in {nameof(outBoundStatsList)}.");
-            yield break;
-        }
-
+        RTCOutboundRTPStreamStats outBoundStats = outBoundStatsList.First(stats => stats.kind == "video");
         string codecId = outBoundStats.codecId;
+
         List<RTCCodecStats> codecStatsList = report.Stats.Values.Where(
             stats => stats.Type == RTCStatsType.Codec).Cast<RTCCodecStats>().ToList();
 
-        if (!codecStatsList.Any())
-        {
-            Debug.LogWarning($"{nameof(RTCOutboundRTPStreamStats)} don't contain any {nameof(RTCCodecStats)}");
-            yield break;
-        }
-
         RTCCodecStats codecStats =
-            codecStatsList.FirstOrDefault(stats => stats.Id == codecId);
-        if (codecStats == null)
-        {
-            Debug.LogWarning($"{nameof(RTCCodecStats)} with codecId {codecId} is not included in {nameof(codecStatsList)}.");
-            yield break;
-        }
-
+            codecStatsList.First(stats => stats.Id == codecId);
 
         actualCodecText.text = string.Format("Using {0} {1}, payloadType={2}.",
             codecStats.mimeType,
             codecStats.sdpFmtpLine,
             codecStats.payloadType
-        );
+            );
     }
 
     private static void OnCreateSessionDescriptionError(RTCError error)

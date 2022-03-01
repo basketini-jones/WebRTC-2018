@@ -65,9 +65,12 @@ namespace Unity.WebRTC.Samples
                 if (e.Track is AudioStreamTrack track)
                 {
                     var outputAudioSource = receiveObjectList[audioIndex];
-                    outputAudioSource.SetTrack(track);
-                    outputAudioSource.loop = true;
-                    outputAudioSource.Play();
+                    track.OnAudioReceived += clip =>
+                    {
+                        outputAudioSource.clip = clip;
+                        outputAudioSource.loop = true;
+                        outputAudioSource.Play();
+                    };
                     audioIndex++;
                 }
             };

@@ -1,22 +1,20 @@
 using System.Runtime.InteropServices;
 using System;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace Unity.WebRTC
 {
     /// <summary>
-    ///
+    /// 
     /// </summary>
     /// <seealso cref="RTCPeerConnection.CreateDataChannel(string, RTCDataChannelInit)"/>
     public class RTCDataChannelInit
     {
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public bool? ordered;
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <remarks>
         /// Cannot be set along with <see cref="RTCDataChannelInit.maxRetransmits"/>.
@@ -24,7 +22,7 @@ namespace Unity.WebRTC
         /// <seealso cref="RTCDataChannelInit.maxRetransmits"/>
         public int? maxPacketLifeTime;
         /// <summary>
-        ///
+        /// 
         /// </summary>
         /// <remarks>
         /// Cannot be set along with <see cref="RTCDataChannelInit.maxPacketLifeTime"/>.
@@ -32,15 +30,15 @@ namespace Unity.WebRTC
         /// <seealso cref="RTCDataChannelInit.maxPacketLifeTime"/>
         public int? maxRetransmits;
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public string protocol;
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public bool? negotiated;
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public int? id;
     }
@@ -77,17 +75,21 @@ namespace Unity.WebRTC
     public delegate void DelegateOnDataChannel(RTCDataChannel channel);
 
     /// <summary>
-    ///
+    /// 
     /// </summary>
     /// <seealso cref="RTCPeerConnection.CreateDataChannel(string, RTCDataChannelInit)"/>
-    public class RTCDataChannel : RefCountedObject
+    public class RTCDataChannel : IDisposable
     {
+        private IntPtr self;
         private DelegateOnMessage onMessage;
         private DelegateOnOpen onOpen;
         private DelegateOnClose onClose;
 
+        private int id;
+        private bool disposed;
+
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public DelegateOnMessage OnMessage
         {
@@ -99,7 +101,7 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public DelegateOnOpen OnOpen
         {
@@ -111,7 +113,7 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public DelegateOnClose OnClose
         {
@@ -123,47 +125,47 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public int Id => NativeMethods.DataChannelGetID(GetSelfOrThrow());
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public string Label => NativeMethods.DataChannelGetLabel(GetSelfOrThrow()).AsAnsiStringWithFreeMem();
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public string Protocol => NativeMethods.DataChannelGetProtocol(GetSelfOrThrow()).AsAnsiStringWithFreeMem();
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public ushort MaxRetransmits => NativeMethods.DataChannelGetMaxRetransmits(GetSelfOrThrow());
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public ushort MaxRetransmitTime => NativeMethods.DataChannelGetMaxRetransmitTime(GetSelfOrThrow());
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public bool Ordered => NativeMethods.DataChannelGetOrdered(GetSelfOrThrow());
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public ulong BufferedAmount => NativeMethods.DataChannelGetBufferedAmount(GetSelfOrThrow());
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
         public bool Negotiated => NativeMethods.DataChannelGetNegotiated(GetSelfOrThrow());
 
         /// <summary>
-        /// The property returns an enum of the <c>RTCDataChannelState</c> which shows
+        /// The property returns an enum of the <c>RTCDataChannelState</c> which shows 
         /// the state of the channel.
         /// </summary>
         /// <remarks>
@@ -209,12 +211,21 @@ namespace Unity.WebRTC
         }
 
         internal RTCDataChannel(IntPtr ptr, RTCPeerConnection peerConnection)
-            : base(ptr)
         {
+            self = ptr;
             WebRTC.Table.Add(self, this);
-            WebRTC.Context.DataChannelRegisterOnMessage(self, DataChannelNativeOnMessage);
-            WebRTC.Context.DataChannelRegisterOnOpen(self, DataChannelNativeOnOpen);
-            WebRTC.Context.DataChannelRegisterOnClose(self, DataChannelNativeOnClose);
+            NativeMethods.DataChannelRegisterOnMessage(self, DataChannelNativeOnMessage);
+            NativeMethods.DataChannelRegisterOnOpen(self, DataChannelNativeOnOpen);
+            NativeMethods.DataChannelRegisterOnClose(self, DataChannelNativeOnClose);
+        }
+
+        internal IntPtr GetSelfOrThrow()
+        {
+            if (self == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("This instance has been disposed.");
+            }
+            return self;
         }
 
         ~RTCDataChannel()
@@ -222,7 +233,7 @@ namespace Unity.WebRTC
             this.Dispose();
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (this.disposed)
             {
@@ -233,8 +244,10 @@ namespace Unity.WebRTC
                 Close();
                 WebRTC.Context.DeleteDataChannel(self);
                 WebRTC.Table.Remove(self);
+                self = IntPtr.Zero;
             }
-            base.Dispose();
+            this.disposed = true;
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -271,63 +284,6 @@ namespace Unity.WebRTC
                 throw new InvalidOperationException("DataChannel is not open");
             }
             NativeMethods.DataChannelSendBinary(GetSelfOrThrow(), msg, msg.Length);
-        }
-
-        public unsafe void Send<T>(NativeArray<T> msg)
-            where T : struct
-        {
-            if (ReadyState != RTCDataChannelState.Open)
-            {
-                throw new InvalidOperationException("DataChannel is not open");
-            }
-            if (!msg.IsCreated)
-            {
-                throw new ArgumentException("Message array has not been created.", nameof(msg));
-            }
-            NativeMethods.DataChannelSendPtr(GetSelfOrThrow(), new IntPtr(msg.GetUnsafeReadOnlyPtr()), msg.Length * UnsafeUtility.SizeOf<T>());
-        }
-
-        public unsafe void Send<T>(NativeSlice<T> msg)
-            where T : struct
-        {
-            if (ReadyState != RTCDataChannelState.Open)
-            {
-                throw new InvalidOperationException("DataChannel is not open");
-            }
-            NativeMethods.DataChannelSendPtr(GetSelfOrThrow(), new IntPtr(msg.GetUnsafeReadOnlyPtr()), msg.Length * UnsafeUtility.SizeOf<T>());
-        }
-
-#if UNITY_2020_1_OR_NEWER // ReadOnly support was introduced in 2020.1
-        public unsafe void Send<T>(NativeArray<T>.ReadOnly msg)
-            where T : struct
-        {
-            if (ReadyState != RTCDataChannelState.Open)
-            {
-                throw new InvalidOperationException("DataChannel is not open");
-            }
-            NativeMethods.DataChannelSendPtr(GetSelfOrThrow(), new IntPtr(msg.GetUnsafeReadOnlyPtr()), msg.Length * UnsafeUtility.SizeOf<T>());
-        }
-#endif
-
-        public unsafe void Send(void* msgPtr, int length)
-        {
-            if (ReadyState != RTCDataChannelState.Open)
-            {
-                throw new InvalidOperationException("DataChannel is not open");
-            }
-            NativeMethods.DataChannelSendPtr(GetSelfOrThrow(), new IntPtr(msgPtr), length);
-        }
-
-        public void Send(IntPtr msgPtr, int length)
-        {
-            if (ReadyState != RTCDataChannelState.Open)
-            {
-                throw new InvalidOperationException("DataChannel is not open");
-            }
-            if (msgPtr != IntPtr.Zero && length > 0)
-            {
-                NativeMethods.DataChannelSendPtr(GetSelfOrThrow(), msgPtr, length);
-            }
         }
 
         public void Close()

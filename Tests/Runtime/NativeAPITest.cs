@@ -42,7 +42,7 @@ namespace Unity.WebRTC.RuntimeTest
         [SetUp]
         public void Init()
         {
-            NativeMethods.RegisterDebugLog(DebugLog, true, NativeLoggingSeverity.LS_VERBOSE);
+            NativeMethods.RegisterDebugLog(DebugLog);
 #if UNITY_IOS && !UNITY_EDITOR
             NativeMethods.RegisterRenderingWebRTCPlugin();
 #endif
@@ -51,7 +51,7 @@ namespace Unity.WebRTC.RuntimeTest
         [TearDown]
         public void CleanUp()
         {
-            NativeMethods.RegisterDebugLog(null, true, NativeLoggingSeverity.LS_VERBOSE);
+            NativeMethods.RegisterDebugLog(null);
         }
 
         [OneTimeSetUp]
@@ -339,14 +339,11 @@ namespace Unity.WebRTC.RuntimeTest
             NativeMethods.ContextDestroy(0);
         }
 
-        [AOT.MonoPInvokeCallback(typeof(DelegateVideoFrameResize))]
-        static void OnVideoFrameResize(IntPtr ptrRenderer, int width, int height) { }
-
         [Test]
         public void CreateAndDeleteVideoRenderer()
         {
             var context = NativeMethods.ContextCreate(0, encoderType, true);
-            var renderer = NativeMethods.CreateVideoRenderer(context, OnVideoFrameResize, true);
+            var renderer = NativeMethods.CreateVideoRenderer(context);
             NativeMethods.DeleteVideoRenderer(context, renderer);
             NativeMethods.ContextDestroy(0);
         }
@@ -360,7 +357,7 @@ namespace Unity.WebRTC.RuntimeTest
             var renderTexture = CreateRenderTexture(width, height);
             var source = NativeMethods.ContextCreateVideoTrackSource(context);
             var track = NativeMethods.ContextCreateVideoTrack(context, "video", source);
-            var renderer = NativeMethods.CreateVideoRenderer(context, OnVideoFrameResize, true);
+            var renderer = NativeMethods.CreateVideoRenderer(context);
             NativeMethods.VideoTrackAddOrUpdateSink(track, renderer);
             NativeMethods.VideoTrackRemoveSink(track, renderer);
             NativeMethods.DeleteVideoRenderer(context, renderer);
@@ -479,7 +476,7 @@ namespace Unity.WebRTC.RuntimeTest
             var receiveTexture = CreateRenderTexture(width, height);
             var source = NativeMethods.ContextCreateVideoTrackSource(context);
             var track = NativeMethods.ContextCreateVideoTrack(context, "video", source);
-            var renderer = NativeMethods.CreateVideoRenderer(context, OnVideoFrameResize, true);
+            var renderer = NativeMethods.CreateVideoRenderer(context);
             var rendererId = NativeMethods.GetVideoRendererId(renderer);
             NativeMethods.VideoTrackAddOrUpdateSink(track, renderer);
 

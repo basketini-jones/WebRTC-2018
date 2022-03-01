@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -16,9 +17,20 @@ namespace Unity.WebRTC.Samples
 
         const int positionCount = 256;
         float[] spectrum = new float[2048];
+        private AudioClip clip;
 
         Vector3[] array;
         List<LineRenderer> lines = new List<LineRenderer>();
+
+        private Dictionary<AudioSpeakerMode, int> SpeakerModeToChannel = new Dictionary<AudioSpeakerMode, int>()
+        {
+            {AudioSpeakerMode.Mono, 1},
+            {AudioSpeakerMode.Stereo, 2},
+            {AudioSpeakerMode.Quad, 4},
+            {AudioSpeakerMode.Surround, 5},
+            {AudioSpeakerMode.Mode5point1, 6},
+            {AudioSpeakerMode.Mode7point1, 8},
+        };
 
         void Start()
         {
@@ -28,23 +40,13 @@ namespace Unity.WebRTC.Samples
             if(line.gameObject.activeInHierarchy)
                 line.gameObject.SetActive(false);
 
-            var conf = AudioSettings.GetConfiguration();
-            int count = AudioSettingsUtility.SpeakerModeToChannel(conf.speakerMode);
-            ResetLines(count);
-
             AudioSettings.OnAudioConfigurationChanged += OnAudioConfigurationChanged;
-        }
-
-        private void OnDestroy()
-        {
-            AudioSettings.OnAudioConfigurationChanged -= OnAudioConfigurationChanged;
         }
 
         void OnAudioConfigurationChanged(bool deviceChanged)
         {
-            var conf = AudioSettings.GetConfiguration();
-            int count = AudioSettingsUtility.SpeakerModeToChannel(conf.speakerMode);
-            ResetLines(count);
+            // reset lines;
+            clip = null;
         }
 
         void ResetLines(int channelCount)
@@ -67,6 +69,23 @@ namespace Unity.WebRTC.Samples
 
         void Update()
         {
+            if (target.clip == null)
+            {
+                if(lines.Count > 0)
+                    ResetLines(0);
+                clip = null;
+                return;
+            }
+
+            if (clip != target.clip)
+            {
+                clip = target.clip;
+                int channelCount = clip.channels;
+                var conf = AudioSettings.GetConfiguration();
+                int maxChannelCount = SpeakerModeToChannel[conf.speakerMode];
+                channelCount = Math.Min(channelCount, maxChannelCount);
+                ResetLines(channelCount);
+            }
             for (int lineIndex = 0; lineIndex < lines.Count; lineIndex++)
             {
                 target.GetSpectrumData(spectrum, lineIndex, FFTWindow.Rectangular);

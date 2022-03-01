@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace Unity.WebRTC
 {
@@ -20,6 +19,15 @@ namespace Unity.WebRTC
         ~RTCRtpSender()
         {
             this.Dispose();
+        }
+
+        internal IntPtr GetSelfOrThrow()
+        {
+            if (self == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("This instance has been disposed.");
+            }
+            return self;
         }
 
         public override void Dispose()
@@ -91,33 +99,14 @@ namespace Unity.WebRTC
         /// </summary>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public RTCError SetParameters(RTCRtpSendParameters parameters)
+        public RTCErrorType SetParameters(RTCRtpSendParameters parameters)
         {
-            if (Track is VideoStreamTrack videoTrack)
-            {
-                foreach (var encoding in parameters.encodings)
-                {
-                    var scale = encoding.scaleResolutionDownBy;
-                    if (!scale.HasValue)
-                    {
-                        continue;
-                    }
-
-                    var error = WebRTC.ValidateTextureSize((int)(videoTrack.Texture.width / scale),
-                        (int)(videoTrack.Texture.height / scale), Application.platform, WebRTC.GetEncoderType());
-                    if (error.errorType != RTCErrorType.None)
-                    {
-                        return error;
-                    }
-                }
-            }
-
             parameters.CreateInstance(out RTCRtpSendParametersInternal instance);
             IntPtr ptr = Marshal.AllocCoTaskMem(Marshal.SizeOf(instance));
             Marshal.StructureToPtr(instance, ptr, false);
-            RTCErrorType type = NativeMethods.SenderSetParameters(GetSelfOrThrow(), ptr);
+            RTCErrorType error = NativeMethods.SenderSetParameters(GetSelfOrThrow(), ptr);
             Marshal.FreeCoTaskMem(ptr);
-            return new RTCError {errorType = type};
+            return error;
         }
 
         /// <summary>

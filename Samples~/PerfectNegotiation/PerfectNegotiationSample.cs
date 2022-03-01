@@ -135,10 +135,13 @@ class Peer : IDisposable
             Debug.Log($"{this} OnTrack");
             if (e.Track is VideoStreamTrack video)
             {
-                video.OnVideoReceived += tex =>
+                if (video.IsDecoderInitialized)
                 {
-                    receive.texture = tex;
-                };
+                    receive.texture = video.Texture;
+                    return;
+                }
+
+                receive.texture = video.InitializeReceiver(width, height);
             }
         };
 

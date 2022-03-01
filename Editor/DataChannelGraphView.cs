@@ -1,7 +1,6 @@
 using UnityEngine.Experimental.UIElements;
 using UnityEngine.Experimental.UIElements.StyleEnums;
 
-
 namespace Unity.WebRTC.Editor
 {
     internal class DataChannelGraphView

@@ -1,5 +1,4 @@
 using UnityEngine;           // RuntimePlatform
-using System.IO;
 using System.Diagnostics;    // Process
 using System.Linq;
 using UnityEngine.TestTools; // UnityPlatform
@@ -24,9 +23,10 @@ class PluginTest {
         var names = currentProcess.Modules
             .Cast<ProcessModule>()
             .Where(_ => _ != null)
-            .Select(_ => Path.GetFileNameWithoutExtension(_.ModuleName));
+            .Select(_ => _.ModuleName)
+            .ToArray();
 
-        Assert.That(names, Contains.Item(WebRTC.GetModuleName()));
+        Assert.Contains(WebRTC.GetModuleName(), names);
     }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -41,8 +41,8 @@ class PluginTest {
             if (assetImporter.GetType() != typeof(PluginImporter))
                 continue;
             PluginImporter pluginImporter = assetImporter as PluginImporter;
-            Assert.That(pluginImporter, Is.Not.Null);
-            Assert.That(pluginImporter.isPreloaded, Is.True);
+            Assert.IsNotNull(pluginImporter);
+            Assert.IsTrue(pluginImporter.isPreloaded);
         }
        
     }

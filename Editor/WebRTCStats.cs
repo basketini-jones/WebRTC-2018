@@ -44,7 +44,7 @@ namespace Unity.WebRTC.Editor
             var toolbar = new Toolbar {style = {alignItems = Align.FlexEnd}};
             root.Add(toolbar);
 
-            toolbar.Add(new ToolbarFlexSpacer { });
+            toolbar.Add(new ToolbarFlexSpacer {});
 
             var buttonContainer = new VisualElement
             {

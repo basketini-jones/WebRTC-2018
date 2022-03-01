@@ -8,7 +8,7 @@ namespace Unity.WebRTC.Editor
     /// <summary>
     /// This type express a return value of "PlayerSettings.GetArchitecture(BuildTargetGroup.iOS)"
     /// </summary>
-    enum iOSArchitecture
+    public enum iOSArchitecture
     {
         ARMv7 = 0,
         ARM64 = 1,
@@ -18,7 +18,7 @@ namespace Unity.WebRTC.Editor
     /// <summary>
     ///
     /// </summary>
-    class PreprocessBuild : IPreprocessBuildWithReport
+    public class PreprocessBuild : IPreprocessBuildWithReport
     {
         /// <summary>
         ///
@@ -28,7 +28,7 @@ namespace Unity.WebRTC.Editor
         /// <summary>
         ///
         /// </summary>
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021
         public const AndroidSdkVersions RequiredAndroidSdkVersion = AndroidSdkVersions.AndroidApiLevel22;
 #else
         public const AndroidSdkVersions RequiredAndroidSdkVersion = AndroidSdkVersions.AndroidApiLevel21;

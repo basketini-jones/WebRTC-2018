@@ -52,7 +52,7 @@ namespace Unity.WebRTC.RuntimeTest
 
 #if WEBRTC_TEST_PROJECT
         [Test]
-        [UnityPlatform(exclude = new[] {RuntimePlatform.Android, RuntimePlatform.IPhonePlayer})]
+        [UnityPlatform(exclude = new[] {RuntimePlatform.Android})]
         public void WebCamTextureFormat()
         {
             var webCam = new WebCamTexture(10, 10);
@@ -70,8 +70,7 @@ namespace Unity.WebRTC.RuntimeTest
         {
             var encoderType = WebRTC.GetEncoderType();
             var platform = Application.platform;
-            var error = WebRTC.ValidateTextureSize(width, height, platform, encoderType);
-            Assert.That(error.errorType, Is.EqualTo(RTCErrorType.None));
+            Assert.That(() => WebRTC.ValidateTextureSize(width, height, platform, encoderType), Throws.Nothing);
         }
 
         [Test]

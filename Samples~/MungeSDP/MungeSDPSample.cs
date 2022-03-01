@@ -78,10 +78,7 @@ class MungeSDPSample : MonoBehaviour
         {
             if (e.Track is VideoStreamTrack track)
             {
-                track.OnVideoReceived += tex =>
-                {
-                    receiveImage.texture = tex;
-                };
+                receiveImage.texture = track.InitializeReceiver(1280, 720);
             }
         };
 

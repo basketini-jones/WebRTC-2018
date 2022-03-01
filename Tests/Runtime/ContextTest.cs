@@ -13,13 +13,13 @@ namespace Unity.WebRTC.RuntimeTest
         [SetUp]
         public void SetUp()
         {
-            NativeMethods.RegisterDebugLog(DebugLog, true, NativeLoggingSeverity.LS_VERBOSE);
+            NativeMethods.RegisterDebugLog(DebugLog);
         }
 
         [TearDown]
         public void TearDown()
         {
-            NativeMethods.RegisterDebugLog(null, true, NativeLoggingSeverity.LS_VERBOSE);
+            NativeMethods.RegisterDebugLog(null);
         }
 
         [Test]
@@ -103,18 +103,6 @@ namespace Unity.WebRTC.RuntimeTest
             context.DeleteRefPtr(source);
             context.Dispose();
             UnityEngine.Object.DestroyImmediate(rt);
-        }
-
-        [Test]
-        [Category("Context")]
-        public void CreateAndDeleteAudioTrackSink()
-        {
-            var value = NativeMethods.GetHardwareEncoderSupport();
-            var context = Context.Create(
-                encoderType: value ? EncoderType.Hardware : EncoderType.Software);
-            var sink = context.CreateAudioTrackSink();
-            context.DeleteAudioTrackSink(sink);
-            context.Dispose();
         }
     }
 }
