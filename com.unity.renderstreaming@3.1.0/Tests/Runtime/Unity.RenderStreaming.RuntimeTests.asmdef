@@ -1,0 +1,32 @@
+{
+    "name": "Unity.RenderStreaming.RuntimeTests",
+    "references": [
+        "UnityEngine.TestRunner",
+        "Unity.RenderStreaming.Runtime",
+        "Unity.WebRTC",
+        "Unity.RenderStreaming.Editor",
+        "Unity.InputSystem",
+        "UnityEditor.TestRunner"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS",
+        "LinuxStandalone64",
+        "macOSStandalone",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ]
+}
